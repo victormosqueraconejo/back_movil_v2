@@ -1,11 +1,12 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Evento from './models/eventos.js';
+import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Crear evento
-router.post('/eventos', async (req, res) => {
+router.post('/eventos', authMiddleware, async (req, res) => {
   try {
     const { nombre, ciudad, departamento, fecha_inicio, fecha_fin } = req.body;
 
@@ -30,7 +31,7 @@ router.post('/eventos', async (req, res) => {
 });
 
 // Listar eventos
-router.get('/eventos', async (req, res) => {
+router.get('/eventos', authMiddleware, async (req, res) => {
   try {
     const list = await Evento.find().sort({ fecha_creacion: -1 });
     res.json({ ok: true, eventos: list });
@@ -40,7 +41,7 @@ router.get('/eventos', async (req, res) => {
 });
 
 // Obtener por id
-router.get('/eventos/:id', async (req, res) => {
+router.get('/eventos/:id', authMiddleware, async (req, res) => {
   try {
     const doc = await Evento.findById(req.params.id);
     if (!doc) return res.status(404).json({ ok: false, message: 'No encontrado' });
@@ -51,7 +52,7 @@ router.get('/eventos/:id', async (req, res) => {
 });
 
 // Actualizar
-router.put('/eventos/:id', async (req, res) => {
+router.put('/eventos/:id', authMiddleware, async (req, res) => {
   try {
     const updated = await Evento.findByIdAndUpdate(
       req.params.id, 
@@ -66,7 +67,7 @@ router.put('/eventos/:id', async (req, res) => {
 });
 
 // Eliminar
-router.delete('/eventos/:id', async (req, res) => {
+router.delete('/eventos/:id', authMiddleware, async (req, res) => {
   try {
     const deleted = await Evento.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ ok: false, message: 'No encontrado' });

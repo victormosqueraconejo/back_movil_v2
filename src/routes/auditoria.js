@@ -1,10 +1,11 @@
 import express from 'express';
 import Auditoria from './models/auditoria.js';
+import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Crear un registro de auditoría
-router.post('/auditoria', async (req, res) => {
+router.post('/auditoria', authMiddleware, async (req, res) => {
   try {
     const payload = req.body;
     const nuevo = new Auditoria(payload);
@@ -17,7 +18,7 @@ router.post('/auditoria', async (req, res) => {
 });
 
 // Listar auditorías
-router.get('/auditoria', async (req, res) => {
+router.get('/auditoria', authMiddleware, async (req, res) => {
   try {
     const items = await Auditoria.find().sort({ fecha: -1 }).limit(200);
     res.json({ ok: true, data: items });
@@ -28,7 +29,7 @@ router.get('/auditoria', async (req, res) => {
 });
 
 // Obtener auditoría por documento
-router.get('/auditoria/documento/:documento_id', async (req, res) => {
+router.get('/auditoria/documento/:documento_id', authMiddleware, async (req, res) => {
   try {
     const items = await Auditoria.find({ documento_id: req.params.documento_id })
       .sort({ fecha: -1 });

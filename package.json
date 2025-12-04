@@ -1,6 +1,5 @@
 {
   "name": "back_movil_v2",
-
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -16,12 +15,12 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.1",
-     "uuid": "^13.0.0"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
   }
 }
-
