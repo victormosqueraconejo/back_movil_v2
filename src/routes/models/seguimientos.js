@@ -2,29 +2,42 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const baseSync = {
-  creado_por: { type: Schema.Types.ObjectId, ref: 'Usuario' },
-  actualizado_por: { type: Schema.Types.ObjectId, ref: 'Usuario' },
-  deleted: { type: Boolean, default: false },
-  version: { type: Number, default: 1 }
+// Esquema base de sincronización
+const base_sync = {
+  modificado_en: { type: Date, default: Date.now },
+  sincronizado: { type: Boolean, default: false }
 };
 
-const registroSchema = new Schema({
-  fecha: { type: Date, default: Date.now },
-  accion: String,
-  gestion_ante: String,
-  tipo_consulta: String,
-  registrado_por: { type: Schema.Types.ObjectId, ref: 'Usuario' }
-}, { _id: false });
-
+// Esquema de Seguimiento
 const SeguimientoSchema = new Schema({
-  caracterizacion_id: { type: Schema.Types.ObjectId, ref: 'Caracterizacion', required: true },
-  registros: { type: [registroSchema], default: [] },
-  estado: { type: String, enum: ['ABIERTO', 'CERRADO'], default: 'ABIERTO' },
-  ...baseSync
-}, { timestamps: { createdAt: 'fechaCreacion', updatedAt: 'fechaActualizacion' }, collection: 'seguimientos' });
+  // UUID del móvil
+  _id: { type: String, required: true },
+  
+  // Vínculo con el registro de Caracterización
+  caracterizacion_id: { type: String, ref: 'Caracterizacion', required: true },
+  
+  // Momento en que se registra el seguimiento
+  fecha_seguimiento: { type: Date, default: Date.now, required: true },
+  
+  // Detalle de la acción realizada
+  descripcion: { type: String, required: true },
+  
+  // Resultado estandarizado de la gestión
+  resultado: { 
+    type: String, 
+    enum: ['EXITOSO', 'PENDIENTE', 'FALLIDO', 'CANCELADO'], 
+    required: true 
+  },
+  
+  ...base_sync
+}, { 
+  _id: false,
+  timestamps: { createdAt: 'fecha_creacion', updatedAt: 'fecha_actualizacion' }, 
+  collection: 'seguimientos' 
+});
 
-SeguimientoSchema.index({ caracterizacionId: 1 });
-SeguimientoSchema.index({ estado: 1 });
+// Índices
+SeguimientoSchema.index({ caracterizacion_id: 1 });
+SeguimientoSchema.index({ resultado: 1 });
 
 export default mongoose.model('Seguimiento', SeguimientoSchema);

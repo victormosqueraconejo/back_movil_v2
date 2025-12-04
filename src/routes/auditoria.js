@@ -19,10 +19,21 @@ router.post('/auditoria', async (req, res) => {
 // Listar auditorías
 router.get('/auditoria', async (req, res) => {
   try {
-    const items = await Auditoria.find().sort({ fechaOperacion: -1 }).limit(200);
+    const items = await Auditoria.find().sort({ fecha: -1 }).limit(200);
     res.json({ ok: true, data: items });
   } catch (error) {
     console.error('Error listando auditorias:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Obtener auditoría por documento
+router.get('/auditoria/documento/:documento_id', async (req, res) => {
+  try {
+    const items = await Auditoria.find({ documento_id: req.params.documento_id })
+      .sort({ fecha: -1 });
+    res.json({ ok: true, data: items });
+  } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
 });

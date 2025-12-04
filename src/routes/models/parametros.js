@@ -2,24 +2,22 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const baseSync = {
-  creado_por: { type: Schema.Types.ObjectId, ref: 'Usuario' },
-  actualizado_por: { type: Schema.Types.ObjectId, ref: 'Usuario' },
-  deleted: { type: Boolean, default: false },
-  version: { type: Number, default: 1 }
-};
-
+// Esquema de Parámetro
 const ParametroSchema = new Schema({
-  tipo: { type: String, required: true },
+  // Tipo de catálogo (ej: TIPO_DOCUMENTO, PAIS)
+  tipo: { type: String, required: true, index: true },
+  
+  // Valor corto que se guarda en Caracterización
   codigo: { type: String, required: true },
+  
+  // Valor visible para el Asesor
   nombre: { type: String, required: true },
-  padre_codigo: { type: String, index: true },
-  valor_adicional: { type: String },
-  orden: { type: Number, default: 0 },
-  estado: { type: String, default: 'ACTIVO' },
-  ...baseSync
-}, { timestamps: { createdAt: 'fechaCreacion', updatedAt: 'fechaActualizacion' }, collection: 'parametros' });
+  
+  // Usado para relaciones jerárquicas (ej: Ciudades filtradas por Departamento)
+  padre_codigo: { type: String }
+}, { collection: 'parametros' });
 
+// Asegura que la combinación tipo + codigo sea única
 ParametroSchema.index({ tipo: 1, codigo: 1 }, { unique: true });
 
 export default mongoose.model('Parametro', ParametroSchema);

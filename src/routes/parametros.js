@@ -3,6 +3,7 @@ import Parametro from './models/parametros.js';
 
 const router = express.Router();
 
+// Crear parámetro
 router.post('/parametros', async (req, res) => {
   try {
     const payload = req.body;
@@ -15,12 +16,36 @@ router.post('/parametros', async (req, res) => {
   }
 });
 
+// Listar todos los parámetros
 router.get('/parametros', async (req, res) => {
   try {
     const items = await Parametro.find().limit(500);
     res.json({ ok: true, data: items });
   } catch (error) {
     console.error('Error listando parametros:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Obtener parámetros por tipo
+router.get('/parametros/tipo/:tipo', async (req, res) => {
+  try {
+    const items = await Parametro.find({ tipo: req.params.tipo });
+    res.json({ ok: true, data: items });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Obtener parámetros por tipo y padre (jerárquico)
+router.get('/parametros/tipo/:tipo/padre/:padre_codigo', async (req, res) => {
+  try {
+    const items = await Parametro.find({ 
+      tipo: req.params.tipo,
+      padre_codigo: req.params.padre_codigo 
+    });
+    res.json({ ok: true, data: items });
+  } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
 });

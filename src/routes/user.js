@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import Usuario from './models/usuarios.js';
 
 const router = express.Router();
@@ -7,46 +8,36 @@ const router = express.Router();
 // Crear un nuevo usuario
 router.post("/users", async (req, res) => {
     try {
-        // Accept either English or Spanish field names
-        const name = req.body.name || req.body.nombreUsuario;
-        const email = req.body.email || req.body.correoElectronico;
-        const password = req.body.password || req.body.contrasena || req.body.contraseña;
+        const { username, password, tipo_documento, numero_documento, nombres, apellidos, 
+                correo_electronico, rol, lider_asignado, departamento, ciudad } = req.body;
 
-        // Validar que todos los campos estén presentes
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "Todos los campos son requeridos (nombre/email/password)" });
+        // Validar campos requeridos
+        if (!username || !password || !tipo_documento || !numero_documento || !nombres || !apellidos || !correo_electronico || !rol) {
+            return res.status(400).json({ message: "Campos requeridos: username, password, tipo_documento, numero_documento, nombres, apellidos, correo_electronico, rol" });
         }
 
         // Encriptar la contraseña
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Crear el nuevo usuario (mapeo a esquema `usuarios`)
-        // Soporta campos legacy (primerNombre, etc.) y nuevos (nombres, apellidos)
-        const nombres = req.body.nombres || 
-            [req.body.primerNombre, req.body.segundoNombre].filter(Boolean).join(' ');
-        const apellidos = req.body.apellidos || 
-            [req.body.primerApellido, req.body.segundoApellido].filter(Boolean).join(' ');
+        const password_hash = await bcrypt.hash(password, 10);
 
         const newUser = new Usuario({
-            nombreUsuario: name,
-            correoElectronico: email,
-            password: hashedPassword,
-            tipoDocumento: req.body.tipoDocumento,
-            numeroDocumento: req.body.numeroDocumento,
+            _id: req.body._id || uuidv4(),
+            username,
+            password_hash,
+            tipo_documento,
+            numero_documento,
             nacionalidad: req.body.nacionalidad,
-            nombres: nombres,
-            apellidos: apellidos,
-            rol: req.body.rol,
-            liderAsignado: req.body.liderAsignado,
-            departamento: req.body.departamento,
-            ciudad: req.body.ciudad,
-            estado: req.body.estado,
-            creadoPor: req.body.creadoPor
+            nombres,
+            apellidos,
+            correo_electronico,
+            rol,
+            lider_asignado,
+            departamento,
+            ciudad,
+            estado: req.body.estado || 'ACTIVO'
         });
         
-        // Guardar en la base de datos
         const user = await newUser.save();
-        res.status(200).json(user);
+        res.status(201).json(user);
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error.message });
@@ -67,20 +58,24 @@ router.get("/users", async (req, res) => {
 // Login de usuario
 router.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await Usuario.findOne({ correoElectronico: email });
+        const { username, password } = req.body;
+        const user = await Usuario.findOne({ username }).select('+password_hash');
 
         if (!user) {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
 
-        const isValid = await bcrypt.compare(password, user.password);
+        const isValid = await bcrypt.compare(password, user.password_hash);
 
         if (!isValid) {
             return res.status(401).json({ message: "Contraseña incorrecta" });
         }
 
-        res.status(200).json({ message: "Login exitoso", user });
+        // No enviar password_hash en la respuesta
+        const userResponse = user.toObject();
+        delete userResponse.password_hash;
+
+        res.status(200).json({ message: "Login exitoso", user: userResponse });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -102,9 +97,15 @@ router.get("/user/:id", async (req, res) => {
 // Actualizar usuario
 router.put("/user/:id", async (req, res) => {
     try {
+        // Si se envía nueva contraseña, hashearla
+        if (req.body.password) {
+            req.body.password_hash = await bcrypt.hash(req.body.password, 10);
+            delete req.body.password;
+        }
+
         const updatedUser = await Usuario.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            { ...req.body, modificado_en: new Date() },
             { new: true }
         );
 

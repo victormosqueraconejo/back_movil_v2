@@ -1,4 +1,5 @@
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import Caracterizacion from './models/caracterizaciones.js';
 
 const router = express.Router();
@@ -6,7 +7,23 @@ const router = express.Router();
 // Crear caracterización
 router.post('/caracterizaciones', async (req, res) => {
   try {
-    const data = req.body;
+    const { ciudadano, evento_id, asesor_id } = req.body;
+
+    // Validar campos requeridos
+    if (!ciudadano || !ciudadano.documento || !ciudadano.tipo_documento) {
+      return res.status(400).json({ ok: false, message: 'Campos requeridos: ciudadano.documento, ciudadano.tipo_documento' });
+    }
+    if (!evento_id) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: evento_id' });
+    }
+    if (!asesor_id) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: asesor_id' });
+    }
+
+    const data = {
+      _id: req.body._id || uuidv4(),
+      ...req.body
+    };
     const created = await Caracterizacion.create(data);
     res.status(201).json({ ok: true, caracterizacion: created });
   } catch (error) {
@@ -18,7 +35,7 @@ router.post('/caracterizaciones', async (req, res) => {
 // Obtener todas
 router.get('/caracterizaciones', async (req, res) => {
   try {
-    const list = await Caracterizacion.find().sort({ fechaCreacion: -1 });
+    const list = await Caracterizacion.find().sort({ fecha_creacion: -1 });
     res.json({ ok: true, caracterizaciones: list });
   } catch (error) {
     console.error(error);
@@ -40,7 +57,11 @@ router.get('/caracterizaciones/:id', async (req, res) => {
 // Actualizar
 router.put('/caracterizaciones/:id', async (req, res) => {
   try {
-    const updated = await Caracterizacion.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Caracterizacion.findByIdAndUpdate(
+      req.params.id, 
+      { ...req.body, modificado_en: new Date() }, 
+      { new: true }
+    );
     if (!updated) return res.status(404).json({ ok: false, message: 'No encontrado' });
     res.json({ ok: true, caracterizacion: updated });
   } catch (error) {
