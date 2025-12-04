@@ -2,19 +2,11 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-// ========================================================================
-// ESQUEMA BASE DE SINCRONIZACIÓN
-// ========================================================================
 const base_sync = {
   modificado_en: { type: Date, default: Date.now },
   sincronizado: { type: Boolean, default: false }
 };
 
-// ========================================================================
-// SUB-ESQUEMAS
-// ========================================================================
-
-// Entidad denormalizada (ya no es colección separada)
 const entidad_data_schema = new Schema({
   nombre: { type: String, required: true },
   tipo: { type: String, required: true },
@@ -28,9 +20,6 @@ const remision_schema = new Schema({
   entidad_data: { type: entidad_data_schema, required: true }
 }, { _id: false });
 
-// ========================================================================
-// ESQUEMA DE CARACTERIZACIÓN (Expediente Central)
-// ========================================================================
 const CaracterizacionSchema = new Schema({
   // UUID del móvil
   _id: { type: String, required: true },
