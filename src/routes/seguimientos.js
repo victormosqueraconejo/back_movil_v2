@@ -1,11 +1,12 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Seguimiento from './models/seguimientos.js';
+import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Crear seguimiento
-router.post('/seguimientos', async (req, res) => {
+router.post('/seguimientos', authMiddleware, async (req, res) => {
   try {
     const { caracterizacion_id, descripcion, resultado } = req.body;
 
@@ -25,7 +26,8 @@ router.post('/seguimientos', async (req, res) => {
 
     const data = {
       _id: req.body._id || uuidv4(),
-      ...req.body
+      ...req.body,
+      usuario_id: req.body.usuario_id || req.user?._id
     };
     const created = await Seguimiento.create(data);
     res.status(201).json({ ok: true, seguimiento: created });
@@ -36,7 +38,7 @@ router.post('/seguimientos', async (req, res) => {
 });
 
 // Obtener todos
-router.get('/seguimientos', async (req, res) => {
+router.get('/seguimientos', authMiddleware, async (req, res) => {
   try {
     const list = await Seguimiento.find().sort({ fecha_creacion: -1 });
     res.json({ ok: true, seguimientos: list });
@@ -46,7 +48,7 @@ router.get('/seguimientos', async (req, res) => {
 });
 
 // Obtener por caracterización
-router.get('/seguimientos/caracterizacion/:caracterizacion_id', async (req, res) => {
+router.get('/seguimientos/caracterizacion/:caracterizacion_id', authMiddleware, async (req, res) => {
   try {
     const list = await Seguimiento.find({ caracterizacion_id: req.params.caracterizacion_id })
       .sort({ fecha_seguimiento: -1 });
@@ -57,7 +59,7 @@ router.get('/seguimientos/caracterizacion/:caracterizacion_id', async (req, res)
 });
 
 // Obtener por id
-router.get('/seguimientos/:id', async (req, res) => {
+router.get('/seguimientos/:id', authMiddleware, async (req, res) => {
   try {
     const doc = await Seguimiento.findById(req.params.id);
     if (!doc) return res.status(404).json({ ok: false, message: 'No encontrado' });
@@ -68,7 +70,7 @@ router.get('/seguimientos/:id', async (req, res) => {
 });
 
 // Actualizar
-router.put('/seguimientos/:id', async (req, res) => {
+router.put('/seguimientos/:id', authMiddleware, async (req, res) => {
   try {
     const updated = await Seguimiento.findByIdAndUpdate(
       req.params.id, 
@@ -83,7 +85,7 @@ router.put('/seguimientos/:id', async (req, res) => {
 });
 
 // Eliminar
-router.delete('/seguimientos/:id', async (req, res) => {
+router.delete('/seguimientos/:id', authMiddleware, async (req, res) => {
   try {
     const deleted = await Seguimiento.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ ok: false, message: 'No encontrado' });

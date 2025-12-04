@@ -1,11 +1,12 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Caracterizacion from './models/caracterizaciones.js';
+import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Crear caracterización
-router.post('/caracterizaciones', async (req, res) => {
+router.post('/caracterizaciones', authMiddleware, async (req, res) => {
   try {
     const { ciudadano, evento_id, asesor_id } = req.body;
 
@@ -22,7 +23,9 @@ router.post('/caracterizaciones', async (req, res) => {
 
     const data = {
       _id: req.body._id || uuidv4(),
-      ...req.body
+      ...req.body,
+      // Si viene token, podemos guardar el asesor desde el usuario autenticado como respaldo
+      asesor_id: req.body.asesor_id || req.user?._id
     };
     const created = await Caracterizacion.create(data);
     res.status(201).json({ ok: true, caracterizacion: created });
@@ -33,7 +36,7 @@ router.post('/caracterizaciones', async (req, res) => {
 });
 
 // Obtener todas
-router.get('/caracterizaciones', async (req, res) => {
+router.get('/caracterizaciones', authMiddleware, async (req, res) => {
   try {
     const list = await Caracterizacion.find().sort({ fecha_creacion: -1 });
     res.json({ ok: true, caracterizaciones: list });
@@ -44,7 +47,7 @@ router.get('/caracterizaciones', async (req, res) => {
 });
 
 // Obtener por id
-router.get('/caracterizaciones/:id', async (req, res) => {
+router.get('/caracterizaciones/:id', authMiddleware, async (req, res) => {
   try {
     const doc = await Caracterizacion.findById(req.params.id);
     if (!doc) return res.status(404).json({ ok: false, message: 'No encontrado' });
@@ -55,7 +58,7 @@ router.get('/caracterizaciones/:id', async (req, res) => {
 });
 
 // Actualizar
-router.put('/caracterizaciones/:id', async (req, res) => {
+router.put('/caracterizaciones/:id', authMiddleware, async (req, res) => {
   try {
     const updated = await Caracterizacion.findByIdAndUpdate(
       req.params.id, 
@@ -70,7 +73,7 @@ router.put('/caracterizaciones/:id', async (req, res) => {
 });
 
 // Eliminar
-router.delete('/caracterizaciones/:id', async (req, res) => {
+router.delete('/caracterizaciones/:id', authMiddleware, async (req, res) => {
   try {
     const deleted = await Caracterizacion.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ ok: false, message: 'No encontrado' });
