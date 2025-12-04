@@ -71,14 +71,15 @@ router.post("/login", async (req, res) => {
 
         const user = await Usuario.findOne({ username }).select('+password_hash');
 
+        // Si el usuario no existe o la contraseña es incorrecta, devolver mismo mensaje genérico
         if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
         const isValid = await bcrypt.compare(password, user.password_hash);
 
         if (!isValid) {
-            return res.status(401).json({ message: "Contraseña incorrecta" });
+            return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
         // No enviar password_hash en la respuesta
