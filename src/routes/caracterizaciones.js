@@ -46,6 +46,75 @@ router.get('/caracterizaciones', authMiddleware, async (req, res) => {
   }
 });
 
+// Buscar por número de documento
+router.get('/caracterizaciones/documento/:documento', authMiddleware, async (req, res) => {
+  try {
+    const { documento } = req.params;
+    const { tipo_documento } = req.query; // Opcional: filtrar por tipo de documento
+
+    let query = { 'ciudadano.documento': documento };
+    if (tipo_documento) {
+      query['ciudadano.tipo_documento'] = tipo_documento;
+    }
+
+    const caracterizaciones = await Caracterizacion.find(query).sort({ fecha_creacion: -1 });
+    
+    if (caracterizaciones.length === 0) {
+      return res.status(404).json({ ok: false, message: 'No se encontraron caracterizaciones para este documento' });
+    }
+
+    res.json({ ok: true, caracterizaciones });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Buscar por primer nombre y primer apellido
+router.get('/caracterizaciones/buscar', authMiddleware, async (req, res) => {
+  try {
+    const { nombres, apellidos } = req.query;
+
+    if (!nombres && !apellidos) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: 'Debe proporcionar al menos uno de los parámetros: nombres o apellidos' 
+      });
+    }
+
+    let query = {};
+    
+    // Búsqueda por primer nombre (case insensitive, búsqueda parcial)
+    if (nombres) {
+      // Extraer el primer nombre (antes del primer espacio)
+      const primerNombre = nombres.trim().split(' ')[0];
+      query['ciudadano.nombres'] = { 
+        $regex: new RegExp(`^${primerNombre}`, 'i') 
+      };
+    }
+
+    // Búsqueda por primer apellido (case insensitive, búsqueda parcial)
+    if (apellidos) {
+      // Extraer el primer apellido (antes del primer espacio)
+      const primerApellido = apellidos.trim().split(' ')[0];
+      query['ciudadano.apellidos'] = { 
+        $regex: new RegExp(`^${primerApellido}`, 'i') 
+      };
+    }
+
+    const caracterizaciones = await Caracterizacion.find(query).sort({ fecha_creacion: -1 });
+    
+    if (caracterizaciones.length === 0) {
+      return res.status(404).json({ ok: false, message: 'No se encontraron caracterizaciones con los criterios de búsqueda' });
+    }
+
+    res.json({ ok: true, caracterizaciones, total: caracterizaciones.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Obtener por id
 router.get('/caracterizaciones/:id', authMiddleware, async (req, res) => {
   try {

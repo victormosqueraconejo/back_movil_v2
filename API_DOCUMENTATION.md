@@ -500,7 +500,168 @@ curl -X GET http://localhost:9000/api/caracterizaciones \
 
 ---
 
-### 3. Obtener Caracterización por ID
+### 3. Buscar Caracterizaciones por Número de Documento
+
+**Método:** `GET`  
+**URL:** `/api/caracterizaciones/documento/:documento`  
+**Autenticación:** Requerida (Bearer Token)
+
+#### Parámetros de URL
+
+- `documento` (string, requerido): Número de documento del ciudadano
+
+#### Query Parameters (Opcionales)
+
+- `tipo_documento` (string, opcional): Filtrar por tipo de documento (ej: "CC", "TI", "CE")
+
+#### Respuesta Exitosa (200)
+
+```json
+{
+  "ok": true,
+  "caracterizaciones": [
+    {
+      "_id": "uuid-1",
+      "ciudadano": {
+        "documento": "12345678",
+        "tipo_documento": "CC",
+        "nombres": "Juan Carlos",
+        "apellidos": "Pérez Martínez"
+      },
+      "evento_id": "uuid-del-evento",
+      "asesor_id": "uuid-del-asesor",
+      "fecha_creacion": "2024-01-15T10:30:00.000Z",
+      ...
+    },
+    {
+      "_id": "uuid-2",
+      "ciudadano": {
+        "documento": "12345678",
+        "tipo_documento": "CC",
+        ...
+      },
+      ...
+    }
+  ]
+}
+```
+
+#### Errores
+
+**404 - No encontrado:**
+```json
+{
+  "ok": false,
+  "message": "No se encontraron caracterizaciones para este documento"
+}
+```
+
+#### Ejemplo de Request
+
+**Buscar por documento sin filtrar tipo:**
+```bash
+curl -X GET http://localhost:9000/api/caracterizaciones/documento/12345678 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar por documento y tipo específico:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/documento/12345678?tipo_documento=CC" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 4. Buscar Caracterizaciones por Nombre y Apellido
+
+**Método:** `GET`  
+**URL:** `/api/caracterizaciones/buscar`  
+**Autenticación:** Requerida (Bearer Token)
+
+#### Query Parameters
+
+- `nombres` (string, opcional): Primer nombre del ciudadano (búsqueda parcial, case insensitive)
+- `apellidos` (string, opcional): Primer apellido del ciudadano (búsqueda parcial, case insensitive)
+
+**Nota:** Debe proporcionar al menos uno de los dos parámetros (`nombres` o `apellidos`).
+
+#### Respuesta Exitosa (200)
+
+```json
+{
+  "ok": true,
+  "caracterizaciones": [
+    {
+      "_id": "uuid-1",
+      "ciudadano": {
+        "documento": "12345678",
+        "tipo_documento": "CC",
+        "nombres": "Juan Carlos",
+        "apellidos": "Pérez Martínez"
+      },
+      "evento_id": "uuid-del-evento",
+      "asesor_id": "uuid-del-asesor",
+      "fecha_creacion": "2024-01-15T10:30:00.000Z",
+      ...
+    },
+    {
+      "_id": "uuid-2",
+      "ciudadano": {
+        "documento": "87654321",
+        "tipo_documento": "CC",
+        "nombres": "Juan",
+        "apellidos": "Pérez"
+      },
+      ...
+    }
+  ],
+  "total": 2
+}
+```
+
+#### Errores
+
+**400 - Parámetros faltantes:**
+```json
+{
+  "ok": false,
+  "message": "Debe proporcionar al menos uno de los parámetros: nombres o apellidos"
+}
+```
+
+**404 - No encontrado:**
+```json
+{
+  "ok": false,
+  "message": "No se encontraron caracterizaciones con los criterios de búsqueda"
+}
+```
+
+#### Ejemplo de Request
+
+**Buscar solo por nombre:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?nombres=Juan" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar solo por apellido:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?apellidos=Pérez" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar por nombre y apellido:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?nombres=Juan&apellidos=Pérez" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Nota:** La búsqueda es parcial y case insensitive. Si buscas "juan", encontrará "Juan", "JUAN", "Juan Carlos", etc. Solo busca por el primer nombre o primer apellido (antes del primer espacio).
+
+---
+
+### 5. Obtener Caracterización por ID
 
 **Método:** `GET`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -543,7 +704,7 @@ curl -X GET http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 4. Actualizar Caracterización
+### 6. Actualizar Caracterización
 
 **Método:** `PUT`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -593,7 +754,7 @@ curl -X PUT http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 5. Eliminar Caracterización
+### 7. Eliminar Caracterización
 
 **Método:** `DELETE`  
 **URL:** `/api/caracterizaciones/:id`  
