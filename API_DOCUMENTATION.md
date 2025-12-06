@@ -397,6 +397,7 @@ Content-Type: application/json
   },
   "evento_id": "string (requerido, UUID del evento)",
   "asesor_id": "string (requerido, UUID del asesor)",
+  "estado": "string (opcional, enum: 'ACTIVO' | 'INACTIVO', default: 'ACTIVO')",
   ...
 }
 ```
@@ -415,6 +416,7 @@ Content-Type: application/json
     },
     "evento_id": "uuid-del-evento",
     "asesor_id": "uuid-del-asesor",
+    "estado": "ACTIVO",
     "fecha_creacion": "2024-01-15T10:30:00.000Z",
     ...
   }
@@ -722,6 +724,7 @@ Todos los campos son opcionales. Solo envía los campos que deseas actualizar:
 {
   "ciudadano": { ... },
   "evento_id": "string (opcional)",
+  "estado": "string (opcional, enum: 'ACTIVO' | 'INACTIVO')",
   ...
 }
 ```

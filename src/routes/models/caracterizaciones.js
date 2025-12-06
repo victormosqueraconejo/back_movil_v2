@@ -36,6 +36,14 @@ const CaracterizacionSchema = new Schema({
   evento_id: { type: String, ref: 'Evento', required: true },
   asesor_id: { type: String, ref: 'Usuario', required: true },
   
+  // Estado de la caracterización
+  estado: { 
+    type: String, 
+    enum: ['ACTIVO', 'INACTIVO'], 
+    default: 'ACTIVO',
+    index: true
+  },
+  
   // Secciones del formulario (Mixed para flexibilidad)
   identidad: { type: Schema.Types.Mixed },
   salud: { type: Schema.Types.Mixed },
