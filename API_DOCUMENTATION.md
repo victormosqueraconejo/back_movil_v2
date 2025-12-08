@@ -663,7 +663,91 @@ curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?nombres=Juan&ape
 
 ---
 
-### 5. Obtener Caracterización por ID
+### 5. Buscar Caracterizaciones por ID de Evento
+
+**Método:** `GET`  
+**URL:** `/api/caracterizaciones/evento/:evento_id`  
+**Autenticación:** Requerida (Bearer Token)
+
+#### Parámetros de URL
+
+- `evento_id` (string, requerido): UUID del evento
+
+#### Query Parameters (Opcionales)
+
+- `estado` (string, opcional): Filtrar por estado de la caracterización (`ACTIVO` o `INACTIVO`)
+
+#### Respuesta Exitosa (200)
+
+```json
+{
+  "ok": true,
+  "caracterizaciones": [
+    {
+      "_id": "uuid-1",
+      "ciudadano": {
+        "documento": "12345678",
+        "tipo_documento": "CC",
+        "nombres": "Juan Carlos",
+        "apellidos": "Pérez Martínez"
+      },
+      "evento_id": "uuid-del-evento",
+      "asesor_id": "uuid-del-asesor",
+      "estado": "ACTIVO",
+      "fecha_creacion": "2024-01-15T10:30:00.000Z",
+      ...
+    },
+    {
+      "_id": "uuid-2",
+      "ciudadano": {
+        "documento": "87654321",
+        "tipo_documento": "CC",
+        "nombres": "María",
+        "apellidos": "González"
+      },
+      "evento_id": "uuid-del-evento",
+      "asesor_id": "uuid-del-asesor-2",
+      "estado": "ACTIVO",
+      ...
+    }
+  ],
+  "total": 2
+}
+```
+
+#### Errores
+
+**404 - No encontrado:**
+```json
+{
+  "ok": false,
+  "message": "No se encontraron caracterizaciones para este evento"
+}
+```
+
+#### Ejemplo de Request
+
+**Buscar todas las caracterizaciones de un evento:**
+```bash
+curl -X GET http://localhost:9000/api/caracterizaciones/evento/uuid-del-evento \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar solo las caracterizaciones activas de un evento:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/evento/uuid-del-evento?estado=ACTIVO" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar solo las caracterizaciones inactivas de un evento:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/evento/uuid-del-evento?estado=INACTIVO" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+### 6. Obtener Caracterización por ID
 
 **Método:** `GET`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -706,7 +790,7 @@ curl -X GET http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 6. Actualizar Caracterización
+### 7. Actualizar Caracterización
 
 **Método:** `PUT`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -757,7 +841,7 @@ curl -X PUT http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 7. Eliminar Caracterización
+### 8. Eliminar Caracterización
 
 **Método:** `DELETE`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -1444,7 +1528,7 @@ curl -X POST http://localhost:9000/api/parametros \
 
 #### Respuesta Exitosa (200)
 
-Retorna hasta 500 parámetros:
+Retorna todos los parámetros almacenados en la base de datos, ordenados por tipo y nombre:
 
 ```json
 {
@@ -1455,10 +1539,25 @@ Retorna hasta 500 parámetros:
       "tipo": "DEPARTAMENTO",
       "codigo": "05",
       "nombre": "Antioquia",
-      ...
+      "padre_codigo": null
+    },
+    {
+      "_id": "uuid-2",
+      "tipo": "DEPARTAMENTO",
+      "codigo": "11",
+      "nombre": "Bogotá D.C.",
+      "padre_codigo": null
+    },
+    {
+      "_id": "uuid-3",
+      "tipo": "CIUDAD",
+      "codigo": "05001",
+      "nombre": "Medellín",
+      "padre_codigo": "05"
     },
     ...
-  ]
+  ],
+  "total": 150
 }
 ```
 

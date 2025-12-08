@@ -20,8 +20,8 @@ router.post('/parametros', authMiddleware, async (req, res) => {
 // Listar todos los parámetros
 router.get('/parametros', authMiddleware, async (req, res) => {
   try {
-    const items = await Parametro.find().limit(500);
-    res.json({ ok: true, data: items });
+    const items = await Parametro.find().sort({ tipo: 1, nombre: 1 });
+    res.json({ ok: true, data: items, total: items.length });
   } catch (error) {
     console.error('Error listando parametros:', error);
     res.status(500).json({ ok: false, error: error.message });

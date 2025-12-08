@@ -115,6 +115,30 @@ router.get('/caracterizaciones/buscar', authMiddleware, async (req, res) => {
   }
 });
 
+// Buscar caracterizaciones por evento_id
+router.get('/caracterizaciones/evento/:evento_id', authMiddleware, async (req, res) => {
+  try {
+    const { evento_id } = req.params;
+    const { estado } = req.query; // Opcional: filtrar por estado (ACTIVO/INACTIVO)
+
+    let query = { evento_id };
+    if (estado) {
+      query.estado = estado;
+    }
+
+    const caracterizaciones = await Caracterizacion.find(query).sort({ fecha_creacion: -1 });
+    
+    if (caracterizaciones.length === 0) {
+      return res.status(404).json({ ok: false, message: 'No se encontraron caracterizaciones para este evento' });
+    }
+
+    res.json({ ok: true, caracterizaciones, total: caracterizaciones.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Obtener por id
 router.get('/caracterizaciones/:id', authMiddleware, async (req, res) => {
   try {
