@@ -370,11 +370,16 @@ curl -X DELETE http://localhost:9000/api/user/uuid-del-usuario
 
 **Nota:** Todos los endpoints de caracterizaciones requieren autenticación con token JWT.
 
-### 1. Crear Caracterización
+### 1. Crear o Actualizar Caracterización
 
 **Método:** `POST`  
 **URL:** `/api/caracterizaciones`  
 **Autenticación:** Requerida (Bearer Token)
+
+**Nota importante:** Este endpoint funciona como **upsert** (crear o actualizar):
+- Si ya existe una caracterización con el mismo `documento`, `tipo_documento` y `evento_id`, **se actualiza** (retorna 200)
+- Si es una nueva caracterización del mismo usuario (mismo documento) pero diferente evento, **se crea nueva** y las caracterizaciones anteriores del mismo documento se marcan como `INACTIVO` automáticamente
+- La caracterización nueva o actualizada siempre queda con estado `ACTIVO`
 
 #### Headers
 
@@ -402,11 +407,13 @@ Content-Type: application/json
 }
 ```
 
-#### Respuesta Exitosa (201)
+#### Respuesta Exitosa
 
+**Cuando se crea una nueva caracterización (201):**
 ```json
 {
   "ok": true,
+  "accion": "creada",
   "caracterizacion": {
     "_id": "uuid-generado",
     "ciudadano": {
@@ -422,6 +429,37 @@ Content-Type: application/json
   }
 }
 ```
+
+**Cuando se actualiza una caracterización existente (200):**
+```json
+{
+  "ok": true,
+  "accion": "actualizada",
+  "caracterizacion": {
+    "_id": "uuid-existente",
+    "ciudadano": {
+      "documento": "12345678",
+      "tipo_documento": "CC",
+      ...
+    },
+    "evento_id": "uuid-del-evento",
+    "asesor_id": "uuid-del-asesor",
+    "estado": "ACTIVO",
+    "fecha_creacion": "2024-01-15T10:30:00.000Z",
+    "fecha_actualizacion": "2024-01-20T15:30:00.000Z",
+    "modificado_en": "2024-01-20T15:30:00.000Z",
+    ...
+  }
+}
+```
+
+#### Comportamiento Especial
+
+1. **Actualización automática**: Si envías un POST con el mismo `documento`, `tipo_documento` y `evento_id` de una caracterización existente, se actualizará en lugar de crear una duplicada.
+
+2. **Desactivación automática**: Si creas una nueva caracterización del mismo usuario (mismo documento) pero en un evento diferente, todas las caracterizaciones anteriores del mismo documento se marcan automáticamente como `INACTIVO` y la nueva queda como `ACTIVO`.
+
+3. **Estado siempre ACTIVO**: La caracterización nueva o actualizada siempre queda con estado `ACTIVO`, independientemente del valor que envíes en el campo `estado`.
 
 #### Errores
 
@@ -582,10 +620,15 @@ curl -X GET "http://localhost:9000/api/caracterizaciones/documento/12345678?tipo
 
 #### Query Parameters
 
-- `nombres` (string, opcional): Primer nombre del ciudadano (búsqueda parcial, case insensitive)
-- `apellidos` (string, opcional): Primer apellido del ciudadano (búsqueda parcial, case insensitive)
+- `nombres` (string, opcional): Nombre del ciudadano (busca en primer nombre y segundo nombre, búsqueda parcial, case insensitive)
+- `apellidos` (string, opcional): Apellido del ciudadano (busca en primer apellido y segundo apellido, búsqueda parcial, case insensitive)
+- `nombre_completo` (string, opcional): Nombre completo del ciudadano (busca en la concatenación de nombres + apellidos, búsqueda parcial, case insensitive)
 
-**Nota:** Debe proporcionar al menos uno de los dos parámetros (`nombres` o `apellidos`).
+**Nota:** 
+- Debe proporcionar al menos uno de los tres parámetros (`nombres`, `apellidos` o `nombre_completo`).
+- Si usas `nombre_completo`, no puedes usar `nombres` o `apellidos` al mismo tiempo (son mutuamente excluyentes).
+- La búsqueda busca el texto en cualquier parte del campo nombres/apellidos, por lo que encontrará coincidencias en primer nombre, segundo nombre, primer apellido o segundo apellido.
+- `nombre_completo` busca en toda la cadena "nombres apellidos" concatenada.
 
 #### Respuesta Exitosa (200)
 
@@ -627,7 +670,7 @@ curl -X GET "http://localhost:9000/api/caracterizaciones/documento/12345678?tipo
 ```json
 {
   "ok": false,
-  "message": "Debe proporcionar al menos uno de los parámetros: nombres o apellidos"
+  "message": "Debe proporcionar al menos uno de los parámetros: nombres, apellidos o nombre_completo"
 }
 ```
 
@@ -659,7 +702,18 @@ curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?nombres=Juan&ape
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-**Nota:** La búsqueda es parcial y case insensitive. Si buscas "juan", encontrará "Juan", "JUAN", "Juan Carlos", etc. Solo busca por el primer nombre o primer apellido (antes del primer espacio).
+**Buscar por nombre completo (todos los nombres y apellidos):**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/buscar?nombre_completo=Juan Carlos Pérez" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Nota:** La búsqueda es parcial y case insensitive. Busca el texto en cualquier parte del campo nombres o apellidos, por lo que:
+- Si buscas "juan", encontrará "Juan", "JUAN", "Juan Carlos", "Carlos Juan", etc.
+- Si buscas "carlos", encontrará "Juan Carlos", "Carlos", "Carlos Alberto", etc.
+- Si buscas "martinez", encontrará "Pérez Martínez", "Martínez", "González Martínez", etc.
+- Funciona tanto para primer nombre/apellido como para segundo nombre/apellido.
+- `nombre_completo` busca en toda la cadena concatenada "nombres apellidos", útil para buscar "Juan Carlos Pérez Martínez" o cualquier parte del nombre completo.
 
 ---
 
@@ -747,7 +801,95 @@ curl -X GET "http://localhost:9000/api/caracterizaciones/evento/uuid-del-evento?
 
 ---
 
-### 6. Obtener Caracterización por ID
+### 6. Buscar Caracterizaciones por Nacionalidad
+
+**Método:** `GET`  
+**URL:** `/api/caracterizaciones/nacionalidad/:nacionalidad`  
+**Autenticación:** Requerida (Bearer Token)
+
+#### Parámetros de URL
+
+- `nacionalidad` (string, requerido): Nacionalidad del ciudadano (búsqueda parcial, case insensitive)
+
+#### Query Parameters (Opcionales)
+
+- `estado` (string, opcional): Filtrar por estado de la caracterización (`ACTIVO` o `INACTIVO`)
+
+#### Respuesta Exitosa (200)
+
+```json
+{
+  "ok": true,
+  "caracterizaciones": [
+    {
+      "_id": "uuid-1",
+      "ciudadano": {
+        "documento": "12345678",
+        "tipo_documento": "CC",
+        "nombres": "Juan Carlos",
+        "apellidos": "Pérez Martínez"
+      },
+      "identidad": {
+        "nacionalidad": "COLOMBIANA",
+        ...
+      },
+      "evento_id": "uuid-del-evento",
+      "estado": "ACTIVO",
+      ...
+    },
+    {
+      "_id": "uuid-2",
+      "ciudadano": {
+        "documento": "87654321",
+        ...
+      },
+      "identidad": {
+        "nacionalidad": "COLOMBIANA",
+        ...
+      },
+      ...
+    }
+  ],
+  "total": 2
+}
+```
+
+#### Errores
+
+**404 - No encontrado:**
+```json
+{
+  "ok": false,
+  "message": "No se encontraron caracterizaciones con esta nacionalidad"
+}
+```
+
+#### Ejemplo de Request
+
+**Buscar todas las caracterizaciones de una nacionalidad:**
+```bash
+curl -X GET http://localhost:9000/api/caracterizaciones/nacionalidad/COLOMBIANA \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar solo las activas de una nacionalidad:**
+```bash
+curl -X GET "http://localhost:9000/api/caracterizaciones/nacionalidad/COLOMBIANA?estado=ACTIVO" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Buscar por nacionalidad (búsqueda parcial):**
+```bash
+# Buscar "colombiana" encontrará "COLOMBIANA", "colombiana", etc.
+curl -X GET "http://localhost:9000/api/caracterizaciones/nacionalidad/colombiana" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Nota:** La búsqueda es parcial y case insensitive. Si buscas "colombiana", encontrará "COLOMBIANA", "colombiana", "Colombiana", etc.
+
+---
+
+### 7. Obtener Caracterización por ID
 
 **Método:** `GET`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -790,7 +932,7 @@ curl -X GET http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 7. Actualizar Caracterización
+### 8. Actualizar Caracterización
 
 **Método:** `PUT`  
 **URL:** `/api/caracterizaciones/:id`  
@@ -841,7 +983,7 @@ curl -X PUT http://localhost:9000/api/caracterizaciones/uuid-de-la-caracterizaci
 
 ---
 
-### 8. Eliminar Caracterización
+### 9. Eliminar Caracterización
 
 **Método:** `DELETE`  
 **URL:** `/api/caracterizaciones/:id`  
