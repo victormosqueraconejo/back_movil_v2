@@ -43,6 +43,29 @@ router.get('/caracterizaciones', async (req, res) => {
   }
 });
 
+// Obtener por evento_id (debe ir antes de /:id para evitar conflictos)
+router.get('/caracterizaciones/evento/:evento_id', async (req, res) => {
+  try {
+    const { evento_id } = req.params;
+    
+    if (!evento_id) {
+      return res.status(400).json({ ok: false, message: 'evento_id es requerido' });
+    }
+
+    const caracterizaciones = await Caracterizacion.find({ evento_id })
+      .sort({ fecha_creacion: -1 });
+    
+    res.json({ 
+      ok: true, 
+      caracterizaciones,
+      total: caracterizaciones.length 
+    });
+  } catch (error) {
+    console.error('Error buscando caracterizaciones por evento:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Obtener por id
 router.get('/caracterizaciones/:id', async (req, res) => {
   try {
