@@ -31,13 +31,6 @@ const SeguimientoSchema = new Schema({
   // Tipo de consulta (clasificación)
   tipo_consulta: { type: String, required: true },
   
-  // Resultado estandarizado de la gestión
-  resultado: { 
-    type: String, 
-    enum: ['EXITOSO', 'PENDIENTE', 'FALLIDO', 'CANCELADO'], 
-    required: true 
-  },
-  
   ...base_sync
 }, { 
   _id: false,
@@ -47,6 +40,5 @@ const SeguimientoSchema = new Schema({
 
 // Índices
 SeguimientoSchema.index({ caracterizacion_id: 1 });
-SeguimientoSchema.index({ resultado: 1 });
 
 export default mongoose.model('Seguimiento', SeguimientoSchema);
