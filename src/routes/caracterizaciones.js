@@ -66,6 +66,43 @@ router.get('/caracterizaciones/evento/:evento_id', async (req, res) => {
   }
 });
 
+// Obtener por documento (y opcional tipo_documento). Colocar antes de /:id para evitar conflictos.
+router.get('/caracterizaciones/documento/:documento', async (req, res) => {
+  try {
+    const { documento } = req.params;
+    const { tipo_documento } = req.query;
+
+    if (!documento) {
+      return res.status(400).json({ ok: false, message: 'documento es requerido' });
+    }
+
+    const filter = { 'ciudadano.documento': documento };
+    if (tipo_documento) {
+      filter['ciudadano.tipo_documento'] = tipo_documento;
+    }
+
+    const caracterizaciones = await Caracterizacion.find(filter).sort({ fecha_creacion: -1 });
+
+    if (!caracterizaciones || caracterizaciones.length === 0) {
+      return res.json({
+        ok: true,
+        caracterizaciones: [],
+        total: 0,
+        message: 'No se encontraron caracterizaciones para este documento'
+      });
+    }
+
+    res.json({
+      ok: true,
+      caracterizaciones,
+      total: caracterizaciones.length
+    });
+  } catch (error) {
+    console.error('Error buscando caracterizaciones por documento:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Obtener por id
 router.get('/caracterizaciones/:id', async (req, res) => {
   try {
