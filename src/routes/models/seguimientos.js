@@ -19,8 +19,17 @@ const SeguimientoSchema = new Schema({
   // Momento en que se registra el seguimiento
   fecha_seguimiento: { type: Date, default: Date.now, required: true },
   
-  // Detalle de la acción realizada
-  descripcion: { type: String, required: true },
+  // Acción realizada (campo explícito)
+  accion_realizada: { type: String, required: true },
+
+  // Gestión realizada ante (ej. entidad o área)
+  gestion_ante: { type: String, required: true },
+
+  // Detalle de la acción (opcional)
+  descripcion: { type: String },
+
+  // Tipo de consulta (clasificación)
+  tipo_consulta: { type: String, required: true },
   
   // Resultado estandarizado de la gestión
   resultado: { 

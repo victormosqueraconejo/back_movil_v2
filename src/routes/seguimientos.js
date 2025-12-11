@@ -9,14 +9,20 @@ const router = express.Router();
 // Crear seguimiento
 router.post('/seguimientos', authMiddleware, async (req, res) => {
   try {
-    const { caracterizacion_id, descripcion, resultado } = req.body;
+    const { caracterizacion_id, accion_realizada, gestion_ante, tipo_consulta, resultado } = req.body;
 
     // Validar campos requeridos
     if (!caracterizacion_id) {
       return res.status(400).json({ ok: false, message: 'Campo requerido: caracterizacion_id' });
     }
-    if (!descripcion) {
-      return res.status(400).json({ ok: false, message: 'Campo requerido: descripcion' });
+    if (!accion_realizada) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: accion_realizada' });
+    }
+    if (!gestion_ante) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: gestion_ante' });
+    }
+    if (!tipo_consulta) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: tipo_consulta' });
     }
     if (!resultado) {
       return res.status(400).json({ ok: false, message: 'Campo requerido: resultado' });
