@@ -1,6 +1,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Seguimiento from './models/seguimientos.js';
+import Caracterizacion from './models/caracterizaciones.js';
 import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -54,6 +55,50 @@ router.get('/seguimientos/caracterizacion/:caracterizacion_id', authMiddleware, 
       .sort({ fecha_seguimiento: -1 });
     res.json({ ok: true, seguimientos: list });
   } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Obtener por número de documento (debe ir antes de /:id para evitar conflictos)
+router.get('/seguimientos/documento/:documento', authMiddleware, async (req, res) => {
+  try {
+    const { documento } = req.params;
+    
+    if (!documento) {
+      return res.status(400).json({ ok: false, message: 'Número de documento es requerido' });
+    }
+
+    // Buscar todas las caracterizaciones con ese número de documento
+    const caracterizaciones = await Caracterizacion.find({ 
+      'ciudadano.documento': documento 
+    }).select('_id');
+
+    if (!caracterizaciones || caracterizaciones.length === 0) {
+      return res.json({ 
+        ok: true, 
+        seguimientos: [],
+        total: 0,
+        message: 'No se encontraron caracterizaciones para este documento' 
+      });
+    }
+
+    // Obtener los IDs de las caracterizaciones
+    const caracterizacionIds = caracterizaciones.map(c => c._id);
+
+    // Buscar todos los seguimientos asociados a esas caracterizaciones
+    const seguimientos = await Seguimiento.find({ 
+      caracterizacion_id: { $in: caracterizacionIds } 
+    })
+      .sort({ fecha_seguimiento: -1 });
+
+    res.json({ 
+      ok: true, 
+      seguimientos,
+      total: seguimientos.length,
+      documento: documento
+    });
+  } catch (error) {
+    console.error('Error buscando seguimientos por documento:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
