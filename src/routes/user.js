@@ -96,7 +96,7 @@ router.post("/login", async (req, res) => {
             payload,
             process.env.JWT_SECRET || 'dev-secret-change-me',
             {
-                expiresIn: process.env.JWT_EXPIRES_IN || '8h'
+                expiresIn: process.env.JWT_EXPIRES_IN || '2d'
             }
         );
 
