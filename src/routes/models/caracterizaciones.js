@@ -54,6 +54,9 @@ const CaracterizacionSchema = new Schema({
     remisiones: [remision_schema]
   },
   
+  // URL del documento RUR (opcional)
+  rur_document_url: { type: String, default: null },
+  
   ...base_sync
 }, { 
   _id: false,
