@@ -4,12 +4,10 @@ import Caracterizacion from './models/caracterizaciones.js';
 
 const router = express.Router();
 
-// Crear caracterización
 router.post('/caracterizaciones', async (req, res) => {
   try {
     const { ciudadano, evento_id, asesor_id } = req.body;
 
-    // Validar campos requeridos
     if (!ciudadano || !ciudadano.documento || !ciudadano.tipo_documento) {
       return res.status(400).json({ ok: false, message: 'Campos requeridos: ciudadano.documento, ciudadano.tipo_documento' });
     }

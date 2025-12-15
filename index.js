@@ -6,7 +6,6 @@ import userRouter from './src/routes/user.js';
 import caracterizacionesRouter from './src/routes/caracterizaciones.js';
 import seguimientosRouter from './src/routes/seguimientos.js';
 import eventosRouter from './src/routes/eventos.js';
-import auditoriaRouter from './src/routes/auditoria.js';
 import parametrosRouter from './src/routes/parametros.js';
 
 dotenv.config();
@@ -17,7 +16,6 @@ app.use('/api', userRouter);
 app.use('/api', caracterizacionesRouter);
 app.use('/api', seguimientosRouter);
 app.use('/api', eventosRouter);
-app.use('/api', auditoriaRouter);
 app.use('/api', parametrosRouter);
 
 const port = process.env.PORT || 9000;
