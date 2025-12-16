@@ -17,7 +17,8 @@ const entidad_data_schema = new Schema({
 const remision_schema = new Schema({
   fecha_remision: { type: Date, default: Date.now },
   prioridad: { type: String },
-  entidad_data: { type: entidad_data_schema, required: true }
+  // Ahora puede recibir múltiples entidades
+  entidad_data: { type: [entidad_data_schema], required: true }
 }, { _id: false });
 
 const CaracterizacionSchema = new Schema({
