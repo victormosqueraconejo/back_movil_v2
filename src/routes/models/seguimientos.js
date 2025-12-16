@@ -22,8 +22,8 @@ const SeguimientoSchema = new Schema({
   // Acción realizada (campo explícito)
   accion_realizada: { type: String, required: true },
 
-  // Gestión realizada ante (ej. entidad o área)
-  gestion_ante: { type: String, required: true },
+  // Gestión realizada ante (ej. entidad o área). Ahora es un arreglo de strings.
+  gestion_ante: { type: [String], required: true },
 
   // Detalle de la acción (opcional)
   descripcion: { type: String },

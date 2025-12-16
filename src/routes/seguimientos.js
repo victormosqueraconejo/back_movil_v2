@@ -18,8 +18,8 @@ router.post('/seguimientos', authMiddleware, async (req, res) => {
     if (!accion_realizada) {
       return res.status(400).json({ ok: false, message: 'Campo requerido: accion_realizada' });
     }
-    if (!gestion_ante) {
-      return res.status(400).json({ ok: false, message: 'Campo requerido: gestion_ante' });
+    if (!gestion_ante || !Array.isArray(gestion_ante) || gestion_ante.length === 0) {
+      return res.status(400).json({ ok: false, message: 'Campo requerido: gestion_ante (array de strings)' });
     }
     if (!tipo_consulta) {
       return res.status(400).json({ ok: false, message: 'Campo requerido: tipo_consulta' });
