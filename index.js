@@ -8,6 +8,7 @@ import seguimientosRouter from './src/routes/seguimientos.js';
 import eventosRouter from './src/routes/eventos.js';
 import parametrosRouter from './src/routes/parametros.js';
 import statusRouter from './src/routes/status.js';
+import auditoriaRouter from './src/routes/auditoria.js';
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api', seguimientosRouter);
 app.use('/api', eventosRouter);
 app.use('/api', parametrosRouter);
 app.use('/api', statusRouter);
+app.use('/api', auditoriaRouter);
 
 const port = process.env.PORT || 9000;
 app.listen(port, () => {
