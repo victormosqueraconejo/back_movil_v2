@@ -17,7 +17,8 @@ const entidad_data_schema = new Schema({
 const remision_schema = new Schema({
   fecha_remision: { type: Date, default: Date.now },
   prioridad: { type: String },
-  entidad_data: { type: entidad_data_schema, required: true }
+  // Ahora puede recibir múltiples entidades
+  entidad_data: { type: [entidad_data_schema], required: true }
 }, { _id: false });
 
 const CaracterizacionSchema = new Schema({
@@ -36,6 +37,14 @@ const CaracterizacionSchema = new Schema({
   evento_id: { type: String, ref: 'Evento', required: true },
   asesor_id: { type: String, ref: 'Usuario', required: true },
   
+  // Estado de la caracterización
+  estado: { 
+    type: String, 
+    enum: ['ACTIVO', 'INACTIVO'], 
+    default: 'ACTIVO',
+    index: true
+  },
+  
   // Secciones del formulario (Mixed para flexibilidad)
   identidad: { type: Schema.Types.Mixed },
   salud: { type: Schema.Types.Mixed },
@@ -45,6 +54,9 @@ const CaracterizacionSchema = new Schema({
   gestion: {
     remisiones: [remision_schema]
   },
+  
+  // URL del documento RUR (opcional)
+  rur_document_url: { type: String, default: null },
   
   ...base_sync
 }, { 

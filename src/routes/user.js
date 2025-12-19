@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import Usuario from './models/usuarios.js';
 
@@ -37,7 +38,11 @@ router.post("/users", async (req, res) => {
         });
         
         const user = await newUser.save();
-        res.status(201).json(user);
+
+        const userResponse = user.toObject();
+        delete userResponse.password_hash;
+
+        res.status(201).json(userResponse);
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error.message });
@@ -55,27 +60,51 @@ router.get("/users", async (req, res) => {
     }
 });
 
-// Login de usuario
+// Login de usuario (devuelve JWT)
 router.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({ message: "Debe enviar username y password" });
+        }
+
         const user = await Usuario.findOne({ username }).select('+password_hash');
 
+        // Si el usuario no existe o la contraseña es incorrecta, devolver mismo mensaje genérico
         if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
         const isValid = await bcrypt.compare(password, user.password_hash);
 
         if (!isValid) {
-            return res.status(401).json({ message: "Contraseña incorrecta" });
+            return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
         // No enviar password_hash en la respuesta
         const userResponse = user.toObject();
         delete userResponse.password_hash;
 
-        res.status(200).json({ message: "Login exitoso", user: userResponse });
+        const payload = {
+            sub: user._id,
+            username: user.username,
+            rol: user.rol
+        };
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'dev-secret-change-me',
+            {
+                expiresIn: process.env.JWT_EXPIRES_IN || '2d'
+            }
+        );
+
+        res.status(200).json({
+            message: "Login exitoso",
+            token,
+            user: userResponse
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

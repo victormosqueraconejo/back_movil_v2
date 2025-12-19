@@ -1,10 +1,11 @@
 import express from 'express';
 import Parametro from './models/parametros.js';
+import { authMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Crear parámetro
-router.post('/parametros', async (req, res) => {
+router.post('/parametros', authMiddleware, async (req, res) => {
   try {
     const payload = req.body;
     const nuevo = new Parametro(payload);
@@ -17,10 +18,10 @@ router.post('/parametros', async (req, res) => {
 });
 
 // Listar todos los parámetros
-router.get('/parametros', async (req, res) => {
+router.get('/parametros', authMiddleware, async (req, res) => {
   try {
-    const items = await Parametro.find().limit(500);
-    res.json({ ok: true, data: items });
+    const items = await Parametro.find().sort({ tipo: 1, nombre: 1 });
+    res.json({ ok: true, data: items, total: items.length });
   } catch (error) {
     console.error('Error listando parametros:', error);
     res.status(500).json({ ok: false, error: error.message });
@@ -28,7 +29,7 @@ router.get('/parametros', async (req, res) => {
 });
 
 // Obtener parámetros por tipo
-router.get('/parametros/tipo/:tipo', async (req, res) => {
+router.get('/parametros/tipo/:tipo', authMiddleware, async (req, res) => {
   try {
     const items = await Parametro.find({ tipo: req.params.tipo });
     res.json({ ok: true, data: items });
@@ -38,7 +39,7 @@ router.get('/parametros/tipo/:tipo', async (req, res) => {
 });
 
 // Obtener parámetros por tipo y padre (jerárquico)
-router.get('/parametros/tipo/:tipo/padre/:padre_codigo', async (req, res) => {
+router.get('/parametros/tipo/:tipo/padre/:padre_codigo', authMiddleware, async (req, res) => {
   try {
     const items = await Parametro.find({ 
       tipo: req.params.tipo,
