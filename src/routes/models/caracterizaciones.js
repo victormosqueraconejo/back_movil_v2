@@ -40,7 +40,7 @@ const CaracterizacionSchema = new Schema({
   // Estado de la caracterización
   estado: { 
     type: String, 
-    enum: ['ACTIVO', 'INACTIVO'], 
+    enum: ['ACTIVO', 'INACTIVO', 'CERRADO'], 
     default: 'ACTIVO',
     index: true
   },

@@ -146,10 +146,10 @@ router.put('/caracterizaciones/:id', async (req, res) => {
     }
 
     // Validar estado si se está actualizando
-    if (updateData.estado && !['ACTIVO', 'INACTIVO'].includes(updateData.estado)) {
+    if (updateData.estado && !['ACTIVO', 'INACTIVO', 'CERRADO'].includes(updateData.estado)) {
       return res.status(400).json({ 
         ok: false, 
-        message: 'Estado debe ser ACTIVO o INACTIVO' 
+        message: 'Estado debe ser ACTIVO, INACTIVO o CERRADO' 
       });
     }
 
